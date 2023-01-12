@@ -17,7 +17,7 @@ enum class DetailFlag
 };
 
 // parsing first argument: -d to show details
-DetailFlag parseDetailFlag(int argc, char const *argv[])
+inline DetailFlag parseDetailFlag(int argc, char const *argv[])
 {
     if (argc >= 2 && std::string(argv[1]) == "-all")
     {
@@ -71,7 +71,7 @@ class PrintSequenceElements
 {
     friend std::ostream& operator<<(std::ostream& os, const PrintSequenceElements& p)
     {
-        int count = 0;
+        std::size_t count = 0;
         auto iter = p.begin;
         for (; iter != p.end && count < p.num; ++count, ++iter)
         {
@@ -88,9 +88,9 @@ public:
     {
     }
 private:
-    std::size_t num;
     const Iterator begin;
     const Iterator end;
+    std::size_t num;
 };
 
 template<typename Container>
