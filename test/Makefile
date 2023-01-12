@@ -6,18 +6,18 @@
 # make debug=yes to compile with -g
 # make system=windows for windows system
 
-.PHONY : all run
+.PHONY : all run runa runf
 .PHONY .IGNORE : clean
 
 # add your own include path/library path/link library to CXXFLAGS
 CXX = g++
-CXXFLAGS += -std=c++20
+CXXFLAGS += -std=c++2b
 CXXFLAGS += -Wall -Wextra -pedantic-errors -Wshadow
 # CXXFLAGS += -Wfatal-errors
 RM = rm
 
 # final target: add your target here
-target = 
+target = test
 
 # debug
 ifeq ($(debug), yes)
@@ -38,9 +38,16 @@ all : $(all_targets)
 $(all_targets) : $(all_source_files)
 	$(CXX) $^ -o $@ $(CXXFLAGS)
 
-# run
+# run: show final result only
 run : $(all_targets)
 	./$(all_targets)
+# run: show all passed and failed details
+runa : $(all_targets)
+	./$(all_targets) -all
+# run: show failed details only
+runf : $(all_targets)
+	./$(all_targets) -fo
+
 
 # system: affect how to clean and executable file name
 # value: windows/unix
