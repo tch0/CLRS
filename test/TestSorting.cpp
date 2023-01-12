@@ -21,10 +21,14 @@ void testSorting(DetailFlag detail)
         }
         {
             std::vector<int> tmp(vec);
-            std::copy(tmp.begin(), tmp.end(), std::back_inserter(vec));
+            std::copy(vec.begin(), vec.end(), std::back_inserter(tmp));
+            std::vector<int> tmp2(tmp);
             CLRS::insertionSort(tmp.begin(), tmp.end(), std::greater<>());
             util.assertSorted(tmp.begin(), tmp.end(), std::greater<>());
             util.assertEqual(std::is_sorted(tmp.begin(), tmp.end(), std::greater<>()), true);
+            
+            std::sort(tmp2.begin(), tmp2.end(), std::greater<>());
+            util.assertSequenceEqual(tmp, tmp2);
         }
     }
     util.showFinalResult();

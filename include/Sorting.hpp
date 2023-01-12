@@ -12,10 +12,10 @@ void insertionSort(RandomIterator first, RandomIterator last, Compare comp = std
     for (auto iter = first + 1; iter != last; ++iter)
     {
         auto key = std::move(*iter);
-        auto iter2 = iter - 1;
-        for (; iter2 != first && comp(key, *iter2); --iter2)
+        auto iter2 = iter;
+        for (; iter2 != first && comp(key, *(iter2-1)); --iter2)
         {
-            *(iter2+1) = *iter2;
+            *iter2 = *(iter2-1);
         }
         *iter2 = std::move(key);
     }
