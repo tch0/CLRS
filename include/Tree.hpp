@@ -5,6 +5,7 @@
 #include <memory>
 #include <queue>
 #include <type_traits>
+#include <concepts>
 
 template<typename Key, typename Value, typename KeyOfValue, bool Multi = false, typename Compare = std::less<Key>>
 class RbTree
@@ -30,7 +31,7 @@ private:
         TreeNode(const Value& _data) : data(_data)
         {
         }
-        TreeNode(Value&& _data) : data(_data)
+        TreeNode(Value&& _data) : data(std::move(_data))
         {
         }
         template<typename... Args>
@@ -54,7 +55,7 @@ private:
         using IterReference = std::conditional_t<isConst, Value&, const Value&>;
         using IterPointer = std::conditional_t<isConst, Value*, const Value*>;
     public:
-        RbTreeIterator(TreeType* _tree, TreeNode* _node) : tree(_tree), node(_node)
+        RbTreeIterator(TreeType* _tree = nullptr, TreeNode* _node = nullptr) : tree(_tree), node(_node)
         {
         }
         RbTreeIterator(const RbTreeIterator& other) : tree(other.tree), node(other.node)
@@ -76,7 +77,7 @@ private:
         RbTreeIterator operator++(int)
         {
             RbTreeIterator res(tree, node);
-            ++res;
+            ++*this;
             return res;
         }
         RbTreeIterator& operator--()
@@ -87,7 +88,7 @@ private:
         RbTreeIterator operator--(int)
         {
             RbTreeIterator res(tree, node);
-            --res;
+            --*this;
             return res;
         }
         bool operator==(const RbTreeIterator& other) const
@@ -100,7 +101,7 @@ private:
             node = other.node;
             return *this;
         }
-        using iterator_tag = std::bidirectional_iterator_tag;
+        using iterator_category = std::bidirectional_iterator_tag;
         using difference_type = std::ptrdiff_t;
         using value_type = Value;
         using size_type = std::size_t;
@@ -113,6 +114,8 @@ private:
 public:
     using iterator = RbTreeIterator<false>;
     using const_iterator = RbTreeIterator<true>;
+    static_assert(std::bidirectional_iterator<iterator>);
+    static_assert(std::bidirectional_iterator<const_iterator>);
 private:
     Compare m_keyCompare;
     TreeNode* m_root = nullptr;
@@ -182,6 +185,10 @@ private:
     }
     TreeNode* predecessor(TreeNode* node) const
     {
+        if (node == Nil)
+        {
+            return rightMost(m_root);
+        }
         if (node->left != Nil)
         {
             return rightMost(node->left);

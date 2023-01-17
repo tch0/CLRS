@@ -105,6 +105,7 @@ void testRedBlackTree(TestUtil& util)
         }
         util.assertEqual(tree.size(), (std::size_t)800);
         util.assertSorted(tree.begin(), tree.end(), cmp);
+        util.assertSorted(std::make_reverse_iterator(tree.end()), std::make_reverse_iterator(tree.begin()));
     }
 }
 
