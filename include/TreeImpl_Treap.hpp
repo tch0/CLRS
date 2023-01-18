@@ -6,20 +6,22 @@
 #include <queue>
 #include <type_traits>
 #include <concepts>
-#include <TreeImpl_RbTree.hpp>
-#include <TreeImpl_Treap.hpp>
 
 namespace CLRS
 {
 
-template<typename Key, typename Value, typename KeyOfValue, bool Multi = false, typename Compare = std::less<Key>>
-class BsTree
+template<typename Key, typename Priority, typename Value, typename KeyOfValue, typename PriorityOfValue,
+         bool Multi = true, typename KeyCompare = std::less<Key>, typename PriorityCompare = std::less<Priority>>
+class Treap
 {
 /*
-normal binary search tree
+Treap: provide attributes of both binary search tree and heap.
+    binary search tree: use KeyOfValue get key
+    heap: use PriorityOfValue get priority, (using std::less<> would cause greatest value as top/root)
+
+Multi: support multiple same key or not.
 */
 private:
-    enum NodeColor : unsigned char{ RED, BLACK };
     struct TreeNode
     {
         TreeNode(const Value& _data) : data(_data)
@@ -36,26 +38,25 @@ private:
         TreeNode* right = nullptr;
         TreeNode* parent = nullptr;
         Value data;
-        NodeColor color = RED;
     };
 
     template<bool isConst>
-    struct BsTreeIterator
+    struct TreapIterator
     {
-        friend class BsTree<Key, Value, KeyOfValue, Multi, Compare>;
+        friend class Treap<Key, Priority, Value, KeyOfValue, PriorityOfValue, Multi, KeyCompare, PriorityCompare>;
     private:
-        using BaseTreeType = BsTree<Key, Value, KeyOfValue, Multi, Compare>;
+        using BaseTreeType = Treap<Key, Priority, Value, KeyOfValue, PriorityOfValue, Multi, KeyCompare, PriorityCompare>;
         using TreeType = std::conditional_t<isConst, const BaseTreeType, BaseTreeType>;
         using IterReference = std::conditional_t<isConst, Value&, const Value&>;
         using IterPointer = std::conditional_t<isConst, Value*, const Value*>;
     public:
-        BsTreeIterator(TreeType* _tree = nullptr, TreeNode* _node = nullptr) : tree(_tree), node(_node)
+        TreapIterator(TreeType* _tree = nullptr, TreeNode* _node = nullptr) : tree(_tree), node(_node)
         {
         }
-        BsTreeIterator(const BsTreeIterator& other) : tree(other.tree), node(other.node)
+        TreapIterator(const TreapIterator& other) : tree(other.tree), node(other.node)
         {
         }
-        BsTreeIterator(const BsTreeIterator<false>& other) requires (isConst) // convert iterator to const_iterator
+        TreapIterator(const TreapIterator<false>& other) requires (isConst) // convert iterator to const_iterator
             : tree(other.tree)
             , node(other.node)
         {
@@ -68,33 +69,33 @@ private:
         {
             return &(node->data);
         }
-        BsTreeIterator& operator++()
+        TreapIterator& operator++()
         {
             node = tree->successor(node);
             return *this;
         }
-        BsTreeIterator operator++(int)
+        TreapIterator operator++(int)
         {
-            BsTreeIterator res(tree, node);
+            TreapIterator res(tree, node);
             ++*this;
             return res;
         }
-        BsTreeIterator& operator--()
+        TreapIterator& operator--()
         {
             node = tree->predecessor(node);
             return *this;
         }
-        BsTreeIterator operator--(int)
+        TreapIterator operator--(int)
         {
-            BsTreeIterator res(tree, node);
+            TreapIterator res(tree, node);
             --*this;
             return res;
         }
-        bool operator==(const BsTreeIterator& other) const
+        bool operator==(const TreapIterator& other) const
         {
             return tree == other.tree && node == other.node;
         }
-        BsTreeIterator& operator=(const BsTreeIterator& other)
+        TreapIterator& operator=(const TreapIterator& other)
         {
             tree = other.tree;
             node = other.node;
@@ -111,12 +112,13 @@ private:
         TreeNode* node;
     };
 public:
-    using iterator = BsTreeIterator<false>;
-    using const_iterator = BsTreeIterator<true>;
+    using iterator = TreapIterator<false>;
+    using const_iterator = TreapIterator<true>;
     static_assert(std::bidirectional_iterator<iterator>);
     static_assert(std::bidirectional_iterator<const_iterator>);
 private:
-    Compare m_keyCompare;
+    KeyCompare m_keyCompare;
+    PriorityCompare m_priorityCompare;
     TreeNode* m_root = nullptr;
     std::size_t m_nodeCount = 0;
 private:
@@ -161,6 +163,12 @@ private:
     {
         static KeyOfValue keyOfValue;
         return keyOfValue(x->data);
+    }
+    using ReturnPriorityType = std::conditional_t<std::is_reference_v<std::invoke_result_t<PriorityOfValue, Value>>, const Key&, Key>;
+    static ReturnPriorityType priority(TreeNode* x)
+    {
+        static PriorityOfValue priorityOfValue;
+        return priorityOfValue(x->data);
     }
     TreeNode* leftMost(TreeNode* node) const
     {
@@ -229,6 +237,63 @@ private:
         }
         return nullptr;
     }
+    // rotate
+    // left rotate: make sure node is not nullptr and node has right child
+    //  node  to   y
+    //   \        /
+    //    y      node
+    void leftRotate(TreeNode* node)
+    {
+        TreeNode* y = node->right;
+        node->right = y->left;
+        if (y->left)
+        {
+            y->left->parent = node;
+        }
+        y->parent = node->parent;
+        if (node->parent == nullptr) // node is root
+        {
+            m_root = y;
+        }
+        else if (node == node->parent->left)
+        {
+            node->parent->left = y;
+        }
+        else
+        {
+            node->parent->right = y;
+        }
+        y->left = node;
+        node->parent = y;
+    }
+    // right rotate: make sure node is not nullptr and node has left child
+    //  node  to  y
+    //  /          \_
+    // y           node
+    void rightRotate(TreeNode* node)
+    {
+        TreeNode* y = node->left;
+        node->left = y->right;
+        if (y->right)
+        {
+            y->right->parent = node;
+        }
+        y->parent = node->parent;
+        if (node->parent == nullptr) // node is root
+        {
+            m_root = y;
+        }
+        else if (node == node->parent->left)
+        {
+            node->parent->left = y;
+        }
+        else
+        {
+            node->parent->right = y;
+        }
+        y->right = node;
+        node->parent = y;
+    }
     // insert a new node, return existed node with same key or the input new node
     TreeNode* insertNode(TreeNode* newNode)
     {
@@ -274,9 +339,25 @@ private:
         newNode->left = newNode->right = nullptr;
         m_root->parent = nullptr;   // insert process may change m_root, m_root->parent should keep nullptr all the time.
         m_nodeCount++;
+        insertFixUp(newNode);
         return newNode;
     }
-    // auxiliary function: replace node with newNode, make sure node is not nullptr or nullptr
+    // fix up the attributes of treap after inserting: make sure node is not nullptr
+    void insertFixUp(TreeNode* node)
+    {
+        while (node->parent && m_priorityCompare(priority(node->parent), priority(node)))
+        {
+            if (node == node->parent->left)
+            {
+                rightRotate(node->parent);
+            }
+            else
+            {
+                leftRotate(node->parent);
+            }
+        }
+    }
+    // auxiliary function: replace node with newNode, make sure node is not nullptr
     void transplant(TreeNode* node, TreeNode* newNode)
     {
         if (node->parent == nullptr) // node is root
@@ -296,30 +377,29 @@ private:
             newNode->parent = node->parent;
         }
     }
-    // remove specified node: make sure node is not nullptr or nullptr
+    // remove specified node: make sure node is not nullptr
     TreeNode* removeNode(TreeNode* node)
     {
         TreeNode* ret = successor(node);
-        if (node->left == nullptr) // node has no left child, (include the case of no child)
+        // rotate node to leave, then remove it
+        while (node->left && node->right)
         {
-            transplant(node, node->right);
+            if (m_priorityCompare(priority(node->left), priority(node->right)))
+            {
+                leftRotate(node);
+            }
+            else
+            {
+                rightRotate(node);
+            }
         }
-        else if (node->right == nullptr) // node has no right child
+        if (node->left)
         {
             transplant(node, node->left);
         }
-        else // node has both left and right child
+        else
         {
-            TreeNode* y = leftMost(node->right); // y has no left child for sure
-            if (y->parent != node)
-            {
-                transplant(y, y->right);
-                y->right = node->right;
-                y->right->parent = y;
-            }
-            transplant(node, y);
-            y->left = node->left;
-            y->left->parent = y;
+            transplant(node, node->right);
         }
         destroyNode(node);
         if (m_root)
@@ -330,54 +410,57 @@ private:
         return ret;
     }
 public:
-    BsTree(Compare keyComp = Compare())
+    Treap(KeyCompare keyComp = KeyCompare(), PriorityCompare priorityComp = PriorityCompare())
         : m_keyCompare(keyComp)
+        , m_priorityCompare(priorityComp)
         , m_root(nullptr)
         , m_nodeCount(0)
     {
     }
     template<std::input_iterator InputIterator>
-    BsTree(InputIterator first, InputIterator last, Compare keyComp = Compare())
+    Treap(InputIterator first, InputIterator last, KeyCompare keyComp = KeyCompare(), PriorityCompare priorityComp = PriorityCompare())
         : m_keyCompare(keyComp)
+        , m_priorityCompare(priorityComp)
         , m_root(nullptr)
         , m_nodeCount(0)
     {
         insert(first, last);
     }
-    BsTree(const BsTree& other)
+    Treap(const Treap& other)
         : m_keyCompare(other.m_keyCompare)
+        , m_priorityCompare(other.m_priorityCompare)
         , m_root(nullptr)
         , m_nodeCount(0)
     {
         m_root = copyNode(other.m_root);
         m_nodeCount = other.m_nodeCount;
     }
-    BsTree(BsTree&& other)
+    Treap(Treap&& other)
         : m_keyCompare(std::move(other.m_keyCompare))
+        , m_priorityCompare(std::move(other.m_priorityCompare))
         , m_root(other.m_root)
         , m_nodeCount(other.m_nodeCount)
     {
         other.m_root = nullptr;
         other.m_nodeCount = 0;
     }
-    BsTree& operator=(const BsTree& other)
+    Treap& operator=(const Treap& other)
     {
         clear();
         m_root = copyNode(other.m_root);
         m_nodeCount = other.m_nodeCount;
         return *this;
     }
-    BsTree& operator=(BsTree&& other)
+    Treap& operator=(Treap&& other)
     {
         clear();
         m_root = other.m_root;
         m_nodeCount = other.m_nodeCount;
-        m_keyCompare = std::move(other.m_keyCompare);
         other.m_root = nullptr;
         other.m_nodeCount = 0;
         return *this;
     }
-    ~BsTree()
+    ~Treap()
     {
         clear();
     }
@@ -464,6 +547,21 @@ public:
         m_root = nullptr;
         m_nodeCount = 0;
     }
+    // heap features
+    // top element (the root element)
+    const Value& top() const
+    {
+        return m_root->data;
+    }
+    // pop top element
+    void pop()
+    {
+        if (m_root)
+        {
+            removeNode(m_root);
+        }
+    }
 };
+
 
 } // namespace CLRS

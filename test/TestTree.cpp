@@ -14,7 +14,7 @@ void testBinarySearchTree(TestUtil& util)
     std::shuffle(vec.begin(), vec.end(), std::mt19937());
     {
         // Multi = false
-        using IntTree = BsTree<int, int, std::identity>;
+        using IntTree = CLRS::BsTree<int, int, std::identity>;
         {
             IntTree tree;
             util.assertSorted(tree.begin(), tree.end());
@@ -87,7 +87,7 @@ void testBinarySearchTree(TestUtil& util)
     }
     {
         // Multi = true
-        using IntTree = BsTree<int, int, std::identity, true, std::greater<>>;
+        using IntTree = CLRS::BsTree<int, int, std::identity, true, std::greater<>>;
         std::greater<> cmp;
         IntTree tree(vec.begin(), vec.end(), cmp);
         tree.insert(vec.begin(), vec.end());
@@ -124,7 +124,7 @@ void testRedBlackTree(TestUtil& util)
     std::shuffle(vec.begin(), vec.end(), std::mt19937());
     {
         // Multi = false
-        using IntTree = RbTree<int, int, std::identity>;
+        using IntTree = CLRS::RbTree<int, int, std::identity>;
         {
             IntTree tree;
             util.assertSorted(tree.begin(), tree.end());
@@ -197,7 +197,7 @@ void testRedBlackTree(TestUtil& util)
     }
     {
         // Multi = true
-        using IntTree = RbTree<int, int, std::identity, true, std::greater<>>;
+        using IntTree = CLRS::RbTree<int, int, std::identity, true, std::greater<>>;
         std::greater<> cmp;
         IntTree tree(vec.begin(), vec.end(), cmp);
         tree.insert(vec.begin(), vec.end());
@@ -227,12 +227,104 @@ void testRedBlackTree(TestUtil& util)
     }
 }
 
+void testTreap(TestUtil& util)
+{
+    std::random_device rd;
+    std::vector<int> keys(1000, 0);
+    std::vector<int> priorities(1000, 0);
+    std::iota(keys.begin(), keys.end(), 0);
+    std::iota(priorities.begin(), priorities.end(), 0);
+    // different seed for keys and priorities
+    std::shuffle(keys.begin(), keys.end(), std::mt19937(0));
+    std::shuffle(priorities.begin(), priorities.end(), std::mt19937(1));
+
+    {
+        auto getFirst = [](std::pair<int, int> p) -> int { return p.first; }; // return value
+        auto getSecond = [](const std::pair<int, int>& p) -> const int& { return p.second; }; // return reference
+        auto cmpFirst = [](const std::pair<int, int>& p1, const std::pair<int, int>& p2) -> bool {
+            return p1.first < p2.first;
+        };
+        using IntTreap = CLRS::Treap<int, int, std::pair<int, int>, decltype(getFirst), decltype(getSecond)>;
+        IntTreap tree;
+        for (std::size_t i = 0; i < keys.size(); ++i)
+        {
+            tree.emplace(keys[i], priorities[i]);
+        }
+        util.assertEqual(tree.size(), (std::size_t)1000);
+        util.assertSorted(tree.begin(), tree.end()); // std::less<> will compare first member in first, no duplicate first, so the default std::less<> is enough
+        util.assertSorted(tree.begin(), tree.end(), cmpFirst);
+        util.assertEqual(tree.empty(), false);
+
+        // tree features
+        {
+            // construction
+            IntTreap tree2(tree.begin(), tree.end(), std::less<int>(), std::less<int>());
+            util.assertSorted(tree.begin(), tree.end());
+            util.assertSequenceEqual(tree, tree2);
+            // copy and move
+            IntTreap tree3(tree2);
+            util.assertSequenceEqual(tree2, tree3);
+            IntTreap tree4(std::move(tree3));
+            util.assertSequenceEqual(tree2, tree4);
+            util.assertEqual(tree3.empty(), true);
+            util.assertEqual(tree3.size(), (std::size_t)0);
+            // copy and move assignment
+            tree3 = tree2;
+            util.assertSequenceEqual(tree2, tree3);
+            tree3 = std::move(tree2);
+            util.assertSequenceEqual(tree3, tree4);
+            // size empty
+            util.assertEqual(tree2.size(), (std::size_t)0);
+            util.assertEqual(tree2.empty(), true);
+            
+            // iterators
+            auto it = tree3.begin();
+            util.assertEqual(getFirst(*it), 0);
+            util.assertEqual(getFirst(*it++), 0);
+            util.assertEqual(getFirst(*it), 1);
+            util.assertEqual(getFirst(*++it), 2);
+            util.assertEqual(getFirst(*it--), 2);
+            util.assertEqual(getFirst(*--it), 0);
+
+            // insert emplace
+            auto p = std::make_pair(1024, 100);
+            tree3.insert(p);
+            tree3.insert(std::make_pair(1024, 78));
+            tree3.emplace(1024, 103);
+            util.assertEqual(tree3.size(), (std::size_t)1003);
+            // erase find
+            while (tree3.find(1024) != tree3.end())
+            {
+                tree3.erase(tree3.find(1024));
+            }
+            util.assertEqual(tree3.size(), (std::size_t)1000);
+            util.assertSorted(tree3.begin(), tree3.end());
+            // clear
+            tree3.clear();
+            util.assertEqual(tree3.size(), (std::size_t)0);
+            util.assertEqual(tree3.empty(), true);
+        }
+        // heap features
+        {
+            // top pop
+            std::vector<int> pri;
+            while (!tree.empty())
+            {
+                pri.push_back(getSecond(tree.top()));
+                tree.pop();
+            }
+            util.assertSorted(pri.begin(), pri.end(), std::greater<>());
+            util.assertEqual(tree.size(), (std::size_t)0);
+            util.assertEqual(tree.empty(), true);
+        }
+    }
+}
+
 void testTree(DetailFlag detail)
 {
     TestUtil util(detail, "tree");
-    
     testBinarySearchTree(util);
     testRedBlackTree(util);
-
+    testTreap(util);
     util.showFinalResult();
 }

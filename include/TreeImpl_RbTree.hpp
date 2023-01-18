@@ -7,6 +7,9 @@
 #include <type_traits>
 #include <concepts>
 
+namespace CLRS
+{
+
 template<typename Key, typename Value, typename KeyOfValue, bool Multi = false, typename Compare = std::less<Key>>
 class RbTree
 {
@@ -680,3 +683,6 @@ public:
         m_nodeCount = 0;
     }
 };
+
+
+} // namespace CLRS

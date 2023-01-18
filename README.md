@@ -14,7 +14,6 @@ make run
 
 索引：
 - 分治策略
-    - 最大子数组问题
     - 矩阵乘法的Strassen算法
 - 排序
     - 插入排序
@@ -27,15 +26,24 @@ make run
 - 数据结构
     - 哈希表
 - 动态规划
+    - 最大子数组问题
     - 矩阵链乘法
     - 最长公共子序列
     - 最优二叉搜索树
 - 贪心
     - 赫夫曼编码
 - 树
+    - 二叉搜索树
     - 红黑树
-    - 区间树
+    - AVL树
+    - 树堆（treap）
+    - 跳表（skip list）
+    - 伸展树（splay tree）
+    - 左偏树（leftist tree）
+    - 线段树（segment tree）
+    - 区间树（interval tree）
     - B树
+    - B+树
     - 斐波那契堆
     - Van Emde Boas 树
     - 不相交集
