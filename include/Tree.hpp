@@ -61,6 +61,11 @@ private:
         RbTreeIterator(const RbTreeIterator& other) : tree(other.tree), node(other.node)
         {
         }
+        RbTreeIterator(const RbTreeIterator<false>& other) requires (isConst) // convert iterator to const_iterator
+            : tree(other.tree)
+            , node(other.node)
+        {
+        }
         IterReference operator*() const
         {
             return node->data;
@@ -638,7 +643,7 @@ public:
         return { this, insertNode(constructNode(std::forward<Args>(args)...)) };
     }
     // UB if iter is end()
-    iterator erase(iterator iter)
+    iterator erase(const_iterator iter)
     {
         return { this, removeNode(iter.node) };
     }
