@@ -120,6 +120,7 @@ private:
     Compare m_keyCompare;
     TreeNode* m_root = nullptr;
     TreeNode* Nil = nullptr;
+    std::size_t m_nodeCount = 0;
 private:
     // node construction and destruction
     template<typename... Args>
@@ -323,6 +324,7 @@ private:
         newNode->left = newNode->right = Nil;
         insertFixUp(newNode);
         m_root->parent = Nil;   // insert process may change m_root, m_root->parent should keep Nil all the time.
+        m_nodeCount++;
         return newNode;
     }
     // fix up the attributes of Red-Black tree after inserting: make sure node is not nullptr or Nil
@@ -444,6 +446,7 @@ private:
             removeFixUp(x);
         }
         m_root->parent = Nil; // delete process may change m_root, m_root->parent should keep Nil all the time (include the case m_root is Nil).
+        m_nodeCount--;
         return ret;
     }
     // fix up the attributes of Red-Black tree after inserting: make sure node is not nullptr or Nil
@@ -530,6 +533,7 @@ public:
     RbTree(Compare keyComp = Compare())
         : m_keyCompare(keyComp)
         , m_root(nullptr)
+        , m_nodeCount(0)
     {
         initNil();
         m_root = Nil;
@@ -538,6 +542,7 @@ public:
     RbTree(InputIterator first, InputIterator last, Compare keyComp = Compare())
         : m_keyCompare(keyComp)
         , m_root(nullptr)
+        , m_nodeCount(0)
     {
         initNil();
         m_root = Nil;
@@ -546,18 +551,21 @@ public:
     RbTree(const RbTree& other)
         : m_keyCompare(other.m_keyCompare)
         , m_root(nullptr)
+        , m_nodeCount(0)
     {
         initNil();
         m_root = Nil;
         insert(other.begin(), other.end()); // better option is copy every node
     }
     RbTree(RbTree&& other)
-        : m_keyCompare(other.m_keyCompare)
+        : m_keyCompare(std::move(other.m_keyCompare))
         , m_root(other.m_root)
         , Nil(other.Nil)
+        , m_nodeCount(other.m_nodeCount)
     {
         other.initNil();
         other.m_root = other.Nil;
+        other.m_nodeCount = 0;
     }
     RbTree& operator=(const RbTree& other)
     {
@@ -571,8 +579,11 @@ public:
         freeNil();
         Nil = other.Nil;
         m_root = other.m_root;
+        m_nodeCount = other.m_nodeCount;
+        m_keyCompare = std::move(other.m_keyCompare);
         other.initNil();
         other.m_root = other.Nil;
+        other.m_nodeCount = 0;
         return *this;
     }
     ~RbTree()
@@ -583,7 +594,7 @@ public:
     // better option, record size
     std::size_t size() const
     {
-        return std::distance(begin(), end());
+        return m_nodeCount;
     }
     bool empty() const
     {
@@ -661,5 +672,6 @@ public:
             q.pop();
         }
         m_root = Nil;
+        m_nodeCount = 0;
     }
 };

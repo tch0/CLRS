@@ -34,7 +34,7 @@ void testRedBlackTree(TestUtil& util)
             IntTree tree3(std::move(tree));
             util.assertEqual(tree.size(), (std::size_t)0);
             util.assertEqual(tree3.size(), (std::size_t)1000);
-            util.assertSorted(tree2.begin(), tree2.end());
+            util.assertSorted(tree3.begin(), tree3.end());
             // operator=
             IntTree tree4;
             tree4 = tree3;
@@ -44,6 +44,14 @@ void testRedBlackTree(TestUtil& util)
             util.assertSorted(tree3.begin(), tree3.end());
             util.assertEqual(tree3.size(), (std::size_t)1000);
             util.assertEqual(tree4.size(), (std::size_t)0);
+            // iterators
+            auto it = tree3.begin();
+            util.assertEqual(*it, 0);
+            util.assertEqual(*it++, 0);
+            util.assertEqual(*it, 1);
+            util.assertEqual(*++it, 2);
+            util.assertEqual(*it--, 2);
+            util.assertEqual(*--it, 0);
 
             // insert, emplace
             int a = 10, b = 1024;
