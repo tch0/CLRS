@@ -320,11 +320,46 @@ void testTreap(TestUtil& util)
     }
 }
 
+void testOrderStatisticTree(TestUtil& util)
+{
+    std::vector<int> vec(1000, 0);
+    std::iota(vec.begin(), vec.end(), 0);
+    std::shuffle(vec.begin(), vec.end(), std::mt19937());
+    {
+        using IntTree = CLRS::OrderStatisticTree<int, int, std::identity>;
+        IntTree tree(vec.begin(), vec.end());
+        std::vector<std::size_t> rankVec{1, 10, 75, 103, 305, 999, 1000, 500};
+        for (auto r : rankVec)
+        {
+            auto iter = tree.select(r);
+            util.assertEqual(*iter, int(r-1));
+            util.assertEqual(tree.rank(iter), r);
+        }
+        // remove 0~100 and 900~1000, rest 800 elements
+        for (int i = 0; i < 100; ++i)
+        {
+            tree.erase(tree.find(i));
+        }
+        for (int i = 900; i < 1000; ++i)
+        {
+            tree.erase(tree.find(i));
+        }
+        std::vector<std::size_t> newRankVec {1, 10, 100, 200, 300, 567, 705, 799, 800};
+        for (auto r : newRankVec)
+        {
+            auto iter = tree.select(r);
+            util.assertEqual(*iter, int(r + 100 - 1));
+            util.assertEqual(tree.rank(iter), r);
+        }
+    }
+}
+
 void testTree(DetailFlag detail)
 {
     TestUtil util(detail, "tree");
     testBinarySearchTree(util);
     testRedBlackTree(util);
     testTreap(util);
+    testOrderStatisticTree(util);
     util.showFinalResult();
 }

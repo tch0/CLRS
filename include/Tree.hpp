@@ -8,6 +8,7 @@
 #include <concepts>
 #include <TreeImpl_RbTree.hpp>
 #include <TreeImpl_Treap.hpp>
+#include <TreeImpl_OrderStatisticTree.hpp>
 
 namespace CLRS
 {

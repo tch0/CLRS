@@ -37,6 +37,7 @@ make run
     - 红黑树
     - AVL树
     - 树堆（treap）
+    - 顺序统计树（order statistic tree）
     - 跳表（skip list）
     - 伸展树（splay tree）
     - 左偏树（leftist tree）
