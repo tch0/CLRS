@@ -7,7 +7,7 @@
 # make system=windows for windows system
 
 .PHONY : all run runa runf
-.PHONY .IGNORE : clean cleantree cleandp
+.PHONY .IGNORE : clean cleansorting cleantree cleandp
 
 # add your own include path/library path/link library to CXXFLAGS
 CXX = g++
@@ -65,6 +65,8 @@ endif
 # clean
 clean :
 	-$(RM) $(all_object_files) $(all_targets)
+cleansorting:
+	-$(RM) ./test ./TestSorting.o
 cleantree : 
 	-$(RM) ./test ./TestTree.o
 cleandp:
