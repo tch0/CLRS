@@ -33,6 +33,7 @@ void testSorting(DetailFlag detail)
         }
         {
             std::vector<std::string> tmp;
+            tmp.reserve(vec.size() * 2);
             std::transform(vec.begin(), vec.end(), std::back_inserter(tmp), [](int val) -> std::string { return std::to_string(val); });
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tmp));
             std::vector<std::string> tmp2(tmp);
@@ -65,6 +66,7 @@ void testSorting(DetailFlag detail)
         }
         {
             std::vector<std::string> tmp;
+            tmp.reserve(vec.size() * 2);
             std::transform(vec.begin(), vec.end(), std::back_inserter(tmp), [](int val) -> std::string { return std::to_string(val); });
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tmp));
             std::vector<std::string> tmp2(tmp);
@@ -97,6 +99,7 @@ void testSorting(DetailFlag detail)
         }
         {
             std::vector<std::string> tmp;
+            tmp.reserve(vec.size() * 2);
             std::transform(vec.begin(), vec.end(), std::back_inserter(tmp), [](int val) -> std::string { return std::to_string(val); });
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tmp));
             std::vector<std::string> tmp2(tmp);
@@ -129,6 +132,7 @@ void testSorting(DetailFlag detail)
         }
         {
             std::vector<std::string> tmp;
+            tmp.reserve(vec.size() * 2);
             std::transform(vec.begin(), vec.end(), std::back_inserter(tmp), [](int val) -> std::string { return std::to_string(val); });
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tmp));
             std::vector<std::string> tmp2(tmp);
